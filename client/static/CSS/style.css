@@ -1,0 +1,6 @@
+#message_board {
+    height: 120px;
+    width: 30%;
+    border: 1px solid black;
+    overflow-y: scroll;
+}

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html ng-app='myApp'>
+    <head>
+        <meta charset="utf-8">
+        <title>Boop!</title>
+        <link rel="stylesheet" type='text/css' href="/static/CSS/style.css">
+        <!-- Load BOWER Components/Dependencies -->
+        <script src='angular/angular.js' type="text/javascript"></script>
+        <script src='angular-route/angular-route.js' type='text/javascript'></script>
+        <script src='angular-cookies/angular-cookies.js' type='text/javascript'></script>
+
+        <!-- Load app.js file, controllers, factories -->
+        <script src='assets/app.js'></script>
+        <script src="assets/controllers/main_controller.js" charset="utf-8"></script>
+
+        <!-- Youtube Player API -->
+        <script src="https://www.youtube.com/iframe_api"></script>
+
+        <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+        <script type ="text/javascript" src="/socket.io/socket.io.js"></script>
+        <script type ="text/javascript">
+            $(document).ready(function (){
+                var socket = io.connect();
+
+
+
+                var current_user;
+                var new_user = function(){
+                    var name = prompt('Please enter your name');
+                    socket.emit('page_load', {user: name});
+                }
+
+                new_user();
+
+                socket.on('existing_user', function(data){
+                    $('#error').html(data.error);
+                    new_user();
+                })
+
+                socket.on('load_messages', function(data){
+                    $('#error').html("");
+                    current_user = data.current_user;
+                    var messages = data.messages;
+                    var message_thread = "";
+                    for(var i = 0; i < messages.length; i++){
+                        message_thread += "<p>" + messages[i].name + ": " + messages[i].message + "</p>";
+                    }
+
+                    $('#message_board').append(message_thread);
+                })
+
+                $('#new_message').submit(function(){
+                    socket.emit('new_message', {message: $('#message').val(), user: current_user})
+                    return false;
+                })
+
+                socket.on('post_new_message', function(data){
+                    $('#message_board').append('<p>' + data.user + ': ' + data.new_message + '</p>');
+                })
+
+                $('.clear_messages').click(function(){
+                    $('#message_board').html("");
+                })
+
+                // keeps overscroll focused on new messages
+                window.setInterval(function() {
+                    var elem = document.getElementById('message_board');
+                    elem.scrollTop = elem.scrollHeight;
+                }, 0);
+
+                var id = "";
+                $('#link').submit(function(){
+                    var hyperlink = $('#hyperlink').val();
+                    var embedded = hyperlink.replace('watch?v=', 'embed/');
+                    // var video = '<iframe id="video" width="512" height="288" src="' + embedded + '" frameborder="0" allowfullscreen></iframe>'
+                    for(var i=embedded.length-1; i>29; i--){
+                        id += embedded[i];
+                    }
+
+                    socket.emit('initiate_video');
+                    return false;
+                })
+
+                socket.on('embed_video', function(){
+                    var player, playing = false;
+                    onYouTubeIframeAPIReady = function() {
+                        player = new YT.Player('video_area', {
+                            height: '288',
+                            width: '512',
+                            videoId: id.split('').reverse().join(''),
+                            events: {
+                                'onStateChange': onPlayerStateChange
+                            }
+                        });
+                    }
+
+                    onPlayerStateChange = function(event) {
+                        if(!playing){
+                            alert('hi');
+                            playing = true;
+                        }
+                    }
+                    onYouTubeIframeAPIReady();
+                })
+
+            }) //outside
+
+        </script>
+
+        <script>
+        </script>
+
+    </head>
+
+    <body>
+        <div id='container'>
+            <div id='v'></div>
+
+            <div id='error'></div>
+            <p>Conversation Board</p>
+            <div id='message_board'></div>
+            <form id='new_message'>
+                <input id='message' type='text' placeholder='Enter message here'>
+                <input type='submit' value='Send'>
+                <button class='clear_messages' type='button'>Clear</button>
+            </form>
+
+            <form id='link'>
+                <input id='hyperlink' type='text' placeholder='Input video URL here'>
+                <input id='play' type='submit' value='Play'>
+            </form>
+
+            <div id='video_area'></div>
+        </div>
+
+        <div ng-view></div>
+    </body>
+</html>

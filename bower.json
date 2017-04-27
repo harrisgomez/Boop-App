@@ -1,0 +1,22 @@
+{
+  "name": "discussion_board",
+  "authors": [
+    "Harris Gomez <harrisgomez28@gmail.com>"
+  ],
+  "description": "",
+  "main": "",
+  "license": "MIT",
+  "homepage": "",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "angular-route": "^1.6.1",
+    "angular": "^1.6.1",
+    "angular-cookies": "^1.6.1"
+  }
+}
