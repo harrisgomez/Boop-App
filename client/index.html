@@ -68,8 +68,8 @@
                     elem.scrollTop = elem.scrollHeight;
                 }, 0);
 
-                var id = "";
                 $('#link').submit(function(){
+                    var id = "";
                     var hyperlink = $('#hyperlink').val();
                     var embedded = hyperlink.replace('watch?v=', 'embed/');
                     // var video = '<iframe id="video" width="512" height="288" src="' + embedded + '" frameborder="0" allowfullscreen></iframe>'
@@ -77,29 +77,78 @@
                         id += embedded[i];
                     }
 
-                    socket.emit('initiate_video');
+                    socket.emit('initiate_video', id);
                     return false;
                 })
 
-                socket.on('embed_video', function(){
+                socket.on('embed_video', function(data){
                     var player, playing = false;
                     onYouTubeIframeAPIReady = function() {
                         player = new YT.Player('video_area', {
                             height: '288',
                             width: '512',
-                            videoId: id.split('').reverse().join(''),
+                            videoId: data.split('').reverse().join(''),
                             events: {
                                 'onStateChange': onPlayerStateChange
                             }
                         });
                     }
 
-                    onPlayerStateChange = function(event) {
-                        if(!playing){
-                            alert('hi');
-                            playing = true;
+                    var ready = false;
+                    function onPlayerReady(event) {
+                        ready = true;
+                    }
+
+                    function onPlayerStateChange(event) {
+                        if (event.data == YT.PlayerState.PLAYING) {
+                            // Video playing
+                            console.log('playing');
+                            console.log(YT.PlayerState);
+                            console.log(YT.PlayerState.PLAYING);
+                            socket.emit('playVideo');
+                        } else {
+                            //Video has paused
+                            console.log('paused');
+                            socket.emit('pauseVideo');
                         }
                     }
+
+                    function playVideo() {
+                        if(ready) player.playVideo();
+                        else setTimeout(function(){ playVideo() },1000);
+                    }
+
+                    function stopVideo() {
+                        player.stopVideo();
+                    }
+
+                    socket.on('videoPlayed', function(){
+                        playVideo();
+                    })
+
+                    socket.on('videoPaused', function(){
+                        stopVideo();
+                    })
+
+
+
+                    // function onYouTubePlayerReady(playerId) {
+                    //     ytplayer = document.getElementById("myytplayer");
+                    //     ytplayer.addEventListener("onStateChange", "onytplayerStateChange");
+                    // }
+                    //
+                    // function onPlayerStateChange(newState) {
+                    //     console.log("Player's new state: " + newState);
+                    // }
+
+
+                    // function onPlayerStateChange(event) {
+                    //     console.log("here's an event", event);
+                    //     if(!playing){
+                    //         alert('hi');
+                    //         playing = true;
+                    //     }
+                    // }
                     onYouTubeIframeAPIReady();
                 })
 

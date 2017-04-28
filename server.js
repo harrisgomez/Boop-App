@@ -51,8 +51,17 @@ io.sockets.on('connection', function(socket){
         io.emit('post_new_message', {new_message: data.message, user: data.user});
     })
 
-    socket.on('initiate_video', function(){
-        io.emit('embed_video');
+    socket.on('initiate_video', function(data){
+        console.log(data);
+        io.emit('embed_video', data);
+    })
+
+    socket.on('playVideo', function(){
+        io.emit('videoPlayed');
+    })
+
+    socket.on('pauseVideo', function(){
+        io.emit('videoPaused');
     })
 
 })
